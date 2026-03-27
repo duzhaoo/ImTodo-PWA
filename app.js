@@ -21,14 +21,7 @@ function getTodayStr() {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 }
 
-function formatDateDisplay() {
-  const now = new Date();
-  const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
-  const month = now.getMonth() + 1;
-  const day = now.getDate();
-  const weekday = weekdays[now.getDay()];
-  return `${month}月${day}日 · 星期${weekday}`;
-}
+
 
 // ===== Storage =====
 function loadState() {
@@ -104,7 +97,7 @@ function updateProgress() {
     progressText.textContent = '今日任务已全部完成';
     if (badge) badge.style.color = 'var(--success)';
   } else {
-    progressText.textContent = `${completed}/${total}`;
+    progressText.textContent = `今日任务完成情况：${completed}/${total}`;
     if (badge) badge.style.color = 'var(--accent)';
   }
 }
@@ -180,7 +173,6 @@ document.addEventListener('keydown', (e) => {
 
 // ===== Initialize =====
 document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('dateDisplay').textContent = formatDateDisplay();
   initTodos();
   renderTodos();
 });
