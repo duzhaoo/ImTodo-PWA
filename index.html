@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ImTodo - 每日待办事项，新拟态风格PWA应用">
+  <meta name="theme-color" content="#e0e5ec">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="ImTodo">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192 512x512" href="icon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <title>ImTodo - 每日待办</title>
+</head>
+
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <div class="header-icon">
+        <img src="icon.png" alt="ImTodo" width="46" height="46" style="border-radius: 8px;">
+      </div>
+      <div class="header-text">
+        <h1>每日待办</h1>
+        <p class="date-display" id="dateDisplay"></p>
+      </div>
+      <div class="progress-badge" id="progressBadge">
+        <span id="progressText">0/0</span>
+      </div>
+    </header>
+
+    <main class="todo-list" id="todoList">
+      <!-- Todos rendered by JS -->
+    </main>
+
+    <footer class="app-footer">
+      <p>每天自动重置 · 坚持每日完成</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+
+</html>
