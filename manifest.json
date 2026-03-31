@@ -1,6 +1,6 @@
 {
-  "name": "ImTodo - 每日待办",
-  "short_name": "ImTodo",
+  "name": "EverydayTodo",
+  "short_name": "EverydayTodo",
   "description": "新拟态风格的每日待办事项PWA应用",
   "start_url": "./index.html",
   "display": "standalone",

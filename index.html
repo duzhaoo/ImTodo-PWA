@@ -4,40 +4,71 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="ImTodo - 每日待办事项，新拟态风格PWA应用">
+  <meta name="description" content="EverydayTodo - 每日待办事项，新拟态风格PWA应用">
   <meta name="theme-color" content="#e0e5ec">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="ImTodo">
+  <meta name="apple-mobile-web-app-title" content="EverydayTodo">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" sizes="192x192 512x512" href="icon.png">
   <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <title>ImTodo - 每日待办</title>
+  <title>EverydayTodo</title>
 </head>
 
 <body>
   <div class="app-container">
     <header class="app-header">
       <div class="header-icon">
-        <img src="icon.png" alt="ImTodo" width="52" height="52" style="border-radius: 8px;">
+        <img src="icon.png" alt="EverydayTodo" width="52" height="52" style="border-radius: 8px;">
       </div>
       <div class="header-text">
-        <h1>每日待办</h1>
+        <h1>待办矩阵</h1>
         <p class="progress-display" id="progressBadge">
           <span id="progressText">0/0</span>
         </p>
       </div>
+      <button class="header-add-btn" id="addFab" aria-label="添加新待办">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+      </button>
     </header>
 
-    <main class="todo-list" id="todoList">
-      <!-- Todos rendered by JS -->
+    <main class="account-list" id="accountList">
+      <!-- Accounts rendered by JS -->
     </main>
 
     <footer class="app-footer">
       <p>每天自动重置 · 坚持每日完成</p>
     </footer>
+
+
+    <!-- Add Task Modal -->
+    <div class="modal-overlay" id="addModalOverlay">
+      <div class="add-modal">
+        <button id="cancelBtn" class="modal-close-btn" aria-label="关闭"><img src="guanbi.png" alt="关闭"></button>
+        <h3 id="modalTitle">新建项</h3>
+        <div class="type-selector" id="typeSelector">
+          <label class="type-radio-label">
+            <input type="radio" name="todoType" value="normal" checked>
+            <span class="type-radio-btn">普通待办</span>
+          </label>
+          <label class="type-radio-label">
+            <input type="radio" name="todoType" value="matrix">
+            <span class="type-radio-btn">自媒体矩阵</span>
+          </label>
+        </div>
+        <input type="text" id="accountInput" class="modal-input" placeholder="输入标题..." autocomplete="off">
+        
+        <div class="modal-actions">
+          <button class="modal-btn delete" id="deleteBtn" style="display: none;">删除</button>
+          <button class="modal-btn save" id="saveBtn">保存</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="app.js"></script>

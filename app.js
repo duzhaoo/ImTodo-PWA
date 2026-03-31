@@ -1,19 +1,14 @@
-// ===== Default Todo Items =====
-const DEFAULT_TODOS = [
-  { id: 1, text: '更新公众号《AI高手杜小虎》' },
-  { id: 3, text: '更新公众号《世界不能没有AI》' },
-  { id: 4, text: '更新公众号《我用AI追女神》' },
-  { id: 5, text: '更新公众号《飘飘AI》' },
-  { id: 6, text: '更新公众号《杜昭精选》' },
-  { id: 7, text: '更新公众号《谁需要学AI》' },
-  { id: 8, text: '更新小红书《世界不能没有AI》' },
-  { id: 9, text: '更新小红书《AI高手杜小虎》' },
+// ===== State & Storage =====
+const STORAGE_KEY = 'imtodo_accounts_v1';
+let accounts = []; 
+
+// Platforms definition
+const PLATFORMS = [
+  { id: 'wechat', icon: '微信.png', name: '公众号' },
+  { id: 'xiaohongshu', icon: '小红书.png', name: '小红书' },
+  { id: 'douyin', icon: 'douyin.png', name: '抖音' },
+  { id: 'shipinhao', icon: 'shipinhao.png', name: '视频号' }
 ];
-
-const STORAGE_KEY = 'imtodo_state_v2';
-
-// ===== State =====
-let todos = [];
 
 // ===== Date Helpers =====
 function getTodayStr() {
@@ -21,14 +16,11 @@ function getTodayStr() {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 }
 
-
-
 // ===== Storage =====
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw);
+    return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
   }
@@ -37,151 +29,247 @@ function loadState() {
 function saveState() {
   const state = {
     date: getTodayStr(),
-    todos: todos.map(t => ({ id: t.id, text: t.text, completed: t.completed })),
+    accounts: accounts
   };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
-// ===== Initialize Todos =====
-function initTodos() {
+// ===== Initialize =====
+function initAccounts() {
   const state = loadState();
   const today = getTodayStr();
 
-  if (state && state.date === today) {
-    // Same day — restore state
-    todos = state.todos;
+  if (state && state.accounts) {
+    if (state.date === today) {
+      // Same day, restore state
+      accounts = state.accounts.map(acc => ({
+        ...acc,
+        type: acc.type || 'matrix'
+      }));
+    } else {
+      // New day, reset platform completion
+      accounts = state.accounts.map(acc => {
+        const newAcc = { ...acc, type: acc.type || 'matrix' };
+        if (newAcc.type === 'normal') {
+          newAcc.completed = false;
+        } else {
+          PLATFORMS.forEach(p => newAcc[p.id] = false);
+        }
+        return newAcc;
+      });
+      saveState();
+    }
   } else {
-    // New day or no state — reset all to uncompleted
-    todos = DEFAULT_TODOS.map(t => ({ ...t, completed: false }));
+    // Migration from old app or completely fresh
+    localStorage.removeItem('imtodo_custom_v1');
+    accounts = [];
     saveState();
   }
 }
 
 // ===== Render =====
-function renderTodos() {
-  const list = document.getElementById('todoList');
+function renderAccounts() {
+  const list = document.getElementById('accountList');
+  
+  if (accounts.length === 0) {
+    list.innerHTML = `<div style="text-align:center;color:var(--text-muted);margin-top:40px;font-size:0.9rem;">暂无自媒体账号卡片，点击右下角添加 +</div>`;
+    updateProgress();
+    return;
+  }
 
-  // Sort: uncompleted first, completed last (preserve original order within each group)
-  const sorted = [...todos].sort((a, b) => {
-    if (a.completed === b.completed) return 0;
-    return a.completed ? 1 : -1;
-  });
-
-  list.innerHTML = sorted.map(todo => `
-    <div class="todo-item ${todo.completed ? 'completed' : ''}" 
-         data-id="${todo.id}" 
-         onclick="toggleTodo(${todo.id})"
-         role="checkbox"
-         aria-checked="${todo.completed}"
-         tabindex="0"
-         id="todo-${todo.id}">
-      <div class="todo-checkbox">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="20 6 9 17 4 12"/>
-        </svg>
-      </div>
-      <span class="todo-text">${todo.text}</span>
-    </div>
-  `).join('');
+  list.innerHTML = accounts.map(acc => {
+    if (acc.type === 'normal') {
+      return `
+        <div class="account-card" data-id="${acc.id}">
+          <div class="account-header" style="margin-bottom: 0;">
+            <div class="normal-todo-content" style="display: flex; align-items: center; gap: 12px; width: 100%;">
+              <div class="checkbox-btn ${acc.completed ? 'active' : ''}" onclick="toggleNormalTodo(${acc.id})">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="opacity: ${acc.completed ? '1' : '0'}; transition: 0.2s;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </div>
+              <span class="account-name" onclick="editAccount(event, ${acc.id})" title="编辑待办" style="flex: 1; ${acc.completed ? 'text-decoration: line-through; opacity: 0.5;' : ''}">${acc.name}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    } else {
+      return `
+        <div class="account-card" data-id="${acc.id}">
+          <div class="account-header">
+            <span class="account-name" onclick="editAccount(event, ${acc.id})" title="编辑账号">${acc.name}</span>
+          </div>
+          <div class="platform-toggles">
+            ${PLATFORMS.map(p => `
+              <div class="platform-btn ${acc[p.id] ? 'active' : ''}" onclick="togglePlatform(${acc.id}, '${p.id}')">
+                <img src="${p.icon}" alt="${p.name}" title="${p.name}">
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+  }).join('');
 
   updateProgress();
 }
 
 function updateProgress() {
-  const completed = todos.filter(t => t.completed).length;
-  const total = todos.length;
+  let completedCount = 0;
+  let totalCount = 0;
+
+  accounts.forEach(acc => {
+    if (acc.type === 'normal') {
+      totalCount++;
+      if (acc.completed) completedCount++;
+    } else {
+      totalCount += PLATFORMS.length;
+      PLATFORMS.forEach(p => {
+        if (acc[p.id]) completedCount++;
+      });
+    }
+  });
+
   const progressText = document.getElementById('progressText');
   const badge = document.getElementById('progressBadge');
-  
-  if (total > 0 && completed === total) {
-    progressText.textContent = '今日任务已全部完成';
+
+  if (totalCount > 0 && completedCount === totalCount) {
+    progressText.textContent = '今日全部分发已完成 =͟͟͞͞( •̀д•́)))';
     if (badge) badge.style.color = 'var(--success)';
   } else {
-    progressText.textContent = `今日任务完成情况：${completed}/${total}`;
+    progressText.textContent = `今日总更新进度：${completedCount}/${totalCount}`;
     if (badge) badge.style.color = 'var(--accent)';
   }
 }
 
-// ===== Toggle Todo =====
-function toggleTodo(id) {
-  const todo = todos.find(t => t.id === id);
-  if (!todo) return;
+// ===== Actions =====
+window.togglePlatform = function(accountId, platformId) {
+  const acc = accounts.find(a => a.id === accountId);
+  if (!acc) return;
+  acc[platformId] = !acc[platformId];
+  
+  saveState();
+  renderAccounts();
+};
 
-  const el = document.querySelector(`.todo-item[data-id="${id}"]`);
+window.toggleNormalTodo = function(accountId) {
+  const acc = accounts.find(a => a.id === accountId);
+  if (!acc) return;
+  acc.completed = !acc.completed;
+  
+  saveState();
+  renderAccounts();
+};
 
-  if (!todo.completed) {
-    // Mark as completed
-    el.classList.add('completing');
-    todo.completed = true;
+// ===== Modal & Setup =====
+let editingAccountId = null;
 
-    // Small celebration particle burst
-    createParticles(el);
+document.getElementById('addFab').addEventListener('click', () => {
+  editingAccountId = null;
+  document.getElementById('modalTitle').textContent = '添加新待办';
+  document.getElementById('deleteBtn').style.display = 'none';
+  document.getElementById('saveBtn').textContent = '保存';
+  document.getElementById('accountInput').value = '';
+  document.querySelector('input[name="todoType"][value="normal"]').checked = true;
+  document.getElementById('typeSelector').style.display = 'flex';
+  
+  document.getElementById('addModalOverlay').classList.add('show');
+  setTimeout(() => document.getElementById('accountInput').focus(), 100);
+});
 
-    setTimeout(() => {
-      saveState();
-      renderTodos();
-    }, 350);
+window.editAccount = function(event, id) {
+  event.stopPropagation();
+  const acc = accounts.find(a => a.id === id);
+  if (!acc) return;
+  
+  editingAccountId = id;
+  document.getElementById('modalTitle').textContent = '编辑待办';
+  document.getElementById('deleteBtn').style.display = 'block';
+  document.getElementById('saveBtn').textContent = '保存修改';
+  document.getElementById('accountInput').value = acc.name;
+  
+  const type = acc.type || 'matrix';
+  document.querySelector(`input[name="todoType"][value="${type}"]`).checked = true;
+  document.getElementById('typeSelector').style.display = 'none';
+  
+  document.getElementById('addModalOverlay').classList.add('show');
+  setTimeout(() => document.getElementById('accountInput').focus(), 100);
+};
+
+function closeAddModal() {
+  document.getElementById('addModalOverlay').classList.remove('show');
+  document.getElementById('accountInput').value = '';
+}
+
+document.getElementById('cancelBtn').addEventListener('click', closeAddModal);
+
+document.getElementById('deleteBtn').addEventListener('click', () => {
+  if (editingAccountId) {
+    accounts = accounts.filter(a => a.id !== editingAccountId);
+    saveState();
+    renderAccounts();
+    closeAddModal();
+  }
+});
+
+document.getElementById('addModalOverlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('addModalOverlay')) {
+    closeAddModal();
+  }
+});
+
+document.getElementById('saveBtn').addEventListener('click', () => {
+  const text = document.getElementById('accountInput').value.trim();
+  if (!text) return;
+
+  const type = document.querySelector('input[name="todoType"]:checked').value;
+
+  if (editingAccountId) {
+    const acc = accounts.find(a => a.id === editingAccountId);
+    if (acc) {
+      acc.name = text;
+    }
   } else {
-    // Mark as uncompleted
-    el.classList.add('uncompleting');
-    todo.completed = false;
-
-    setTimeout(() => {
-      saveState();
-      renderTodos();
-    }, 250);
-  }
-}
-
-// ===== Particle Effect =====
-function createParticles(el) {
-  const rect = el.getBoundingClientRect();
-  const centerX = rect.left + 30;
-  const centerY = rect.top + rect.height / 2;
-
-  const container = document.createElement('div');
-  container.className = 'celebration';
-  document.body.appendChild(container);
-
-  const colors = ['#6c5ce7', '#a29bfe', '#00b894', '#55efc4', '#fdcb6e', '#e17055'];
-
-  for (let i = 0; i < 12; i++) {
-    const particle = document.createElement('div');
-    particle.className = 'particle';
-    particle.style.left = `${centerX + (Math.random() - 0.5) * 60}px`;
-    particle.style.top = `${centerY + (Math.random() - 0.5) * 30}px`;
-    particle.style.background = colors[Math.floor(Math.random() * colors.length)];
-    particle.style.animationDelay = `${Math.random() * 0.2}s`;
-    particle.style.animationDuration = `${0.6 + Math.random() * 0.5}s`;
-    container.appendChild(particle);
+    const newId = accounts.length > 0 ? Math.max(...accounts.map(a => a.id)) + 1 : 1;
+    const newAccount = { id: newId, name: text, type: type };
+    if (type === 'normal') {
+      newAccount.completed = false;
+    } else {
+      PLATFORMS.forEach(p => newAccount[p.id] = false);
+    }
+    accounts.push(newAccount);
   }
 
-  setTimeout(() => container.remove(), 1200);
-}
+  saveState();
+  renderAccounts();
+  closeAddModal();
+});
 
 // ===== Keyboard Accessibility =====
+let lastEnterTime = 0;
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' || e.key === ' ') {
-    const focused = document.activeElement;
-    if (focused && focused.classList.contains('todo-item')) {
-      e.preventDefault();
-      const id = parseInt(focused.dataset.id);
-      toggleTodo(id);
+  if (e.key === 'Enter' && e.target === document.getElementById('accountInput')) {
+    const currentTime = Date.now();
+    if (currentTime - lastEnterTime < 400) {
+      document.getElementById('saveBtn').click();
+      lastEnterTime = 0;
+    } else {
+      lastEnterTime = currentTime;
     }
+    return;
+  }
+  
+  if (e.key === 'Escape' && document.getElementById('addModalOverlay').classList.contains('show')) {
+    closeAddModal();
   }
 });
 
-// ===== Initialize =====
 document.addEventListener('DOMContentLoaded', () => {
-  initTodos();
-  renderTodos();
+  initAccounts();
+  renderAccounts();
 });
 
-// ===== Register Service Worker =====
+// ===== Service Worker =====
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js')
-      .then(reg => console.log('SW registered:', reg.scope))
-      .catch(err => console.log('SW registration failed:', err));
+    navigator.serviceWorker.register('sw.js').catch(err => console.log('SW fail:', err));
   });
 }

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'imtodo-v7';
+const CACHE_NAME = 'imtodo-v16';
 const ASSETS = [
   './',
   './index.html',
