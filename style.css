@@ -473,3 +473,81 @@ body {
     gap: 8px;
   }
 }
+
+/* ===== Drag & Drop Features ===== */
+.account-card.dragging {
+  opacity: 0.5;
+  transform: scale(0.98);
+  box-shadow: 2px 2px 5px var(--shadow-dark), -2px -2px 5px var(--shadow-light);
+  z-index: 100;
+}
+
+.account-card.drag-over-top {
+  border-top: 2px dashed var(--success);
+}
+
+.account-card.drag-over-bottom {
+  border-bottom: 2px dashed var(--success);
+}
+
+.account-card[draggable="true"] {
+  cursor: grab;
+}
+
+.account-card[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+/* ===== Custom Platform Selector in Modal ===== */
+.modal-platform-btn {
+  flex: 1;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  box-shadow: 3px 3px 6px var(--shadow-dark),
+              -3px -3px 6px var(--shadow-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.modal-platform-btn img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  opacity: 0.3;
+  transition: var(--transition);
+  pointer-events: none;
+}
+
+.modal-platform-btn.active {
+  box-shadow: inset 3px 3px 6px var(--shadow-dark),
+              inset -3px -3px 6px var(--shadow-light);
+}
+
+.modal-platform-btn.active img {
+  opacity: 1;
+}
+
+/* ===== Platform Click Animations ===== */
+@keyframes pop-bump {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+@keyframes pop-shrink {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.85); }
+  100% { transform: scale(1); }
+}
+
+.anim-bump img {
+  animation: pop-bump 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.anim-shrink img {
+  animation: pop-shrink 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
