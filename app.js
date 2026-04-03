@@ -1,6 +1,7 @@
 // ===== State & Storage =====
 const STORAGE_KEY = 'imtodo_accounts_v1';
 let accounts = []; 
+let showCompleted = false;
 
 // Platforms definition
 const PLATFORMS = [
@@ -76,52 +77,85 @@ function initAccounts() {
 }
 
 // ===== Render =====
+function isAccountCompleted(acc) {
+  if (acc.type === 'normal') return acc.completed;
+  if (acc.type === 'matrix') {
+    if (!acc.platforms || acc.platforms.length === 0) return false;
+    return acc.platforms.every(pid => acc.done && acc.done[pid]);
+  }
+  return false;
+}
+
+function generateCardHTML(acc, isCompleted) {
+  if (acc.type === 'normal') {
+    return `
+      <div class="account-card ${isCompleted ? 'completed' : ''}" data-id="${acc.id}" draggable="${!isCompleted}">
+        <div class="account-header" style="margin-bottom: 0;">
+          <div class="normal-todo-content" style="display: flex; align-items: center; gap: 12px; width: 100%;">
+            <div class="checkbox-btn ${acc.completed ? 'active' : ''}" onclick="toggleNormalTodo(${acc.id})">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="opacity: ${acc.completed ? '1' : '0'}; transition: 0.2s;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+            <span class="account-name" onclick="editAccount(event, ${acc.id})" title="编辑卡片" style="flex: 1; ${acc.completed ? 'text-decoration: line-through; opacity: 0.5;' : ''}">${acc.name}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  } else {
+    const selectedPlatforms = PLATFORMS.filter(p => acc.platforms.includes(p.id));
+    return `
+      <div class="account-card ${isCompleted ? 'completed' : ''}" data-id="${acc.id}" draggable="${!isCompleted}" style="touch-action: pan-y;">
+        <div class="account-header">
+          <span class="account-name" onclick="editAccount(event, ${acc.id})" title="编辑卡片">${acc.name}</span>
+        </div>
+        <div class="platform-toggles">
+          ${selectedPlatforms.map(p => `
+            <div class="platform-btn ${acc.done && acc.done[p.id] ? 'active' : ''}" id="btn-${acc.id}-${p.id}" onclick="togglePlatform(${acc.id}, '${p.id}')">
+              <img src="${p.icon}" alt="${p.name}" title="${p.name}">
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+}
+
 function renderAccounts() {
   const list = document.getElementById('accountList');
-  
   if (accounts.length === 0) {
     list.innerHTML = `<div style="text-align:center;color:var(--text-muted);margin-top:40px;font-size:0.9rem;">暂无待办卡片，点击右下角添加 +</div>`;
     updateProgress();
     return;
   }
 
-  list.innerHTML = accounts.map(acc => {
-    if (acc.type === 'normal') {
-      return `
-        <div class="account-card" data-id="${acc.id}" draggable="true">
-          <div class="account-header" style="margin-bottom: 0;">
-            <div class="normal-todo-content" style="display: flex; align-items: center; gap: 12px; width: 100%;">
-              <div class="checkbox-btn ${acc.completed ? 'active' : ''}" onclick="toggleNormalTodo(${acc.id})">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="opacity: ${acc.completed ? '1' : '0'}; transition: 0.2s;"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              </div>
-              <span class="account-name" onclick="editAccount(event, ${acc.id})" title="编辑卡片" style="flex: 1; ${acc.completed ? 'text-decoration: line-through; opacity: 0.5;' : ''}">${acc.name}</span>
-            </div>
-          </div>
-        </div>
-      `;
-    } else {
-      // Filter out only selected platforms
-      const selectedPlatforms = PLATFORMS.filter(p => acc.platforms.includes(p.id));
-      return `
-        <div class="account-card" data-id="${acc.id}" draggable="true" style="touch-action: pan-y;">
-          <div class="account-header">
-            <span class="account-name" onclick="editAccount(event, ${acc.id})" title="编辑卡片">${acc.name}</span>
-          </div>
-          <div class="platform-toggles">
-            ${selectedPlatforms.map(p => `
-              <div class="platform-btn ${acc.done && acc.done[p.id] ? 'active' : ''}" id="btn-${acc.id}-${p.id}" onclick="togglePlatform(${acc.id}, '${p.id}')">
-                <img src="${p.icon}" alt="${p.name}" title="${p.name}">
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `;
-    }
-  }).join('');
+  const activeAccounts = accounts.filter(a => !isAccountCompleted(a));
+  const completedAccounts = accounts.filter(a => isAccountCompleted(a));
 
+  let html = '';
+  html += activeAccounts.map(acc => generateCardHTML(acc, false)).join('');
+
+  if (completedAccounts.length > 0) {
+    html += `
+      <div class="completed-divider" onclick="toggleCompletedSection()">
+        <span>已完成 (${completedAccounts.length})</span>
+        <svg class="completed-chevron ${showCompleted ? 'open' : ''}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </div>
+      <div class="completed-container" style="display: ${showCompleted ? 'flex' : 'none'};">
+        ${completedAccounts.map(acc => generateCardHTML(acc, true)).join('')}
+      </div>
+    `;
+  }
+
+  list.innerHTML = html;
   updateProgress();
   setupDragAndDrop();
 }
+
+window.toggleCompletedSection = function() {
+  showCompleted = !showCompleted;
+  renderAccounts();
+};
 
 function updateProgress() {
   let completedCount = 0;
@@ -235,6 +269,7 @@ function handleDragOver(e) {
 
 function handleDragEnter(e) {
   e.preventDefault();
+  if (this.classList.contains('completed')) return;
   if (this !== draggedCard && !this.classList.contains('dragging')) {
     const rect = this.getBoundingClientRect();
     const isTop = e.clientY < rect.top + rect.height / 2;
@@ -254,6 +289,7 @@ function handleDragLeave(e) {
 function handleDrop(e) {
   e.stopPropagation();
   this.classList.remove('drag-over-top', 'drag-over-bottom');
+  if (this.classList.contains('completed')) return false;
   
   if (draggedCard && draggedCard !== this) {
     const fromId = parseInt(draggedCard.dataset.id);
@@ -294,6 +330,8 @@ function handleTouchStart(e) {
         return;
     }
     
+    if (this.classList.contains('completed')) return;
+
     touchDragStarted = false;
     touchStartY = e.touches[0].clientY;
     draggedCard = this;
@@ -342,7 +380,7 @@ function handleTouchMove(e) {
       
       document.querySelectorAll('.account-card').forEach(c => c.classList.remove('drag-over-top', 'drag-over-bottom'));
       
-      if (targetCard && targetCard !== draggedCard) {
+      if (targetCard && targetCard !== draggedCard && !targetCard.classList.contains('completed')) {
           const rect = targetCard.getBoundingClientRect();
           const isTop = y < rect.top + rect.height / 2;
           if (isTop) {

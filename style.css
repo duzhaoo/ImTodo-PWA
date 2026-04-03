@@ -551,3 +551,42 @@ body {
 .anim-shrink img {
   animation: pop-shrink 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
+
+/* ===== Completed Section ===== */
+.completed-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  margin-top: 16px;
+  margin-bottom: 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  transition: var(--transition);
+}
+
+.completed-divider:hover {
+  color: var(--text-secondary);
+}
+
+.completed-chevron {
+  transition: transform 0.3s ease;
+}
+
+.completed-chevron.open {
+  transform: rotate(180deg);
+}
+
+.completed-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  opacity: 0.65;
+}
+
+.account-card.completed {
+  box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
+}
