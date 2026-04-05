@@ -1,6 +1,6 @@
 // ===== State & Storage =====
 const STORAGE_KEY = 'imtodo_accounts_v1';
-let accounts = []; 
+let accounts = [];
 let showCompleted = false;
 
 // Platforms definition
@@ -43,7 +43,7 @@ function initAccounts() {
   if (state && state.accounts) {
     accounts = state.accounts.map(acc => {
       let newAcc = { ...acc, type: acc.type || 'matrix' };
-      
+
       // Migrate old format to new format
       if (newAcc.type === 'matrix' && !newAcc.platforms) {
         newAcc.platforms = PLATFORMS.map(p => p.id); // All platforms by default for old ones
@@ -56,16 +56,16 @@ function initAccounts() {
 
       // Reset if new day
       if (state.date !== today) {
-         if (newAcc.type === 'normal') {
-           newAcc.completed = false;
-         } else if (newAcc.type === 'matrix') {
-           newAcc.done = {};
-           newAcc.platforms.forEach(pid => newAcc.done[pid] = false);
-         }
+        if (newAcc.type === 'normal') {
+          newAcc.completed = false;
+        } else if (newAcc.type === 'matrix') {
+          newAcc.done = {};
+          newAcc.platforms.forEach(pid => newAcc.done[pid] = false);
+        }
       }
       return newAcc;
     });
-    
+
     // Auto save if migration or reset happened
     saveState();
   } else {
@@ -95,7 +95,7 @@ function generateCardHTML(acc, isCompleted) {
             <div class="checkbox-btn ${acc.completed ? 'active' : ''}" onclick="toggleNormalTodo(${acc.id})">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="opacity: ${acc.completed ? '1' : '0'}; transition: 0.2s;"><polyline points="20 6 9 17 4 12"></polyline></svg>
             </div>
-            <span class="account-name" onclick="editAccount(event, ${acc.id})" title="编辑卡片" style="flex: 1; ${acc.completed ? 'text-decoration: line-through; opacity: 0.5;' : ''}">${acc.name}</span>
+            <span class="account-name" onclick="editAccount(event, ${acc.id})" title="编辑卡片" style="flex: 1; ${acc.completed ? 'text-decoration: line-through;' : ''}">${acc.name}</span>
           </div>
         </div>
       </div>
@@ -152,7 +152,7 @@ function renderAccounts() {
   setupDragAndDrop();
 }
 
-window.toggleCompletedSection = function() {
+window.toggleCompletedSection = function () {
   showCompleted = !showCompleted;
   renderAccounts();
 };
@@ -177,7 +177,7 @@ function updateProgress() {
   const badge = document.getElementById('progressBadge');
 
   if (totalCount > 0 && completedCount === totalCount) {
-    progressText.textContent = '今日全部分发已完成 =͟͟͞͞( •̀д•́)))';
+    progressText.textContent = '今日全部待办已完成';
     if (badge) badge.style.color = 'var(--success)';
   } else {
     progressText.textContent = `今日总更新进度：${completedCount}/${totalCount}`;
@@ -186,11 +186,11 @@ function updateProgress() {
 }
 
 // ===== Actions =====
-window.togglePlatform = function(accountId, platformId) {
+window.togglePlatform = function (accountId, platformId) {
   const acc = accounts.find(a => a.id === accountId);
   if (!acc) return;
   acc.done[platformId] = !acc.done[platformId];
-  
+
   // Animation logic snippet
   const btn = document.getElementById(`btn-${accountId}-${platformId}`);
   if (btn) {
@@ -207,14 +207,14 @@ window.togglePlatform = function(accountId, platformId) {
   // Small delay before rerendering so animation isn't immediately lost
   setTimeout(() => {
     renderAccounts();
-  }, 350);
+  }, 150);
 };
 
-window.toggleNormalTodo = function(accountId) {
+window.toggleNormalTodo = function (accountId) {
   const acc = accounts.find(a => a.id === accountId);
   if (!acc) return;
   acc.completed = !acc.completed;
-  
+
   saveState();
   renderAccounts();
 };
@@ -222,7 +222,7 @@ window.toggleNormalTodo = function(accountId) {
 // ===== Drag & Drop =====
 function setupDragAndDrop() {
   const cards = document.querySelectorAll('.account-card');
-  
+
   cards.forEach(card => {
     // HTML5 Drag events (Desktop)
     card.addEventListener('dragstart', handleDragStart);
@@ -231,10 +231,10 @@ function setupDragAndDrop() {
     card.addEventListener('dragenter', handleDragEnter);
     card.addEventListener('dragleave', handleDragLeave);
     card.addEventListener('drop', handleDrop);
-    
+
     // Touch events for mobile
-    card.addEventListener('touchstart', handleTouchStart, {passive: false});
-    card.addEventListener('touchmove', handleTouchMove, {passive: false});
+    card.addEventListener('touchstart', handleTouchStart, { passive: false });
+    card.addEventListener('touchmove', handleTouchMove, { passive: false });
     card.addEventListener('touchend', handleTouchEnd);
   });
 }
@@ -246,7 +246,7 @@ let touchDragStarted = false;
 
 function handleDragStart(e) {
   draggedCard = this;
-  if(e.type === 'dragstart') {
+  if (e.type === 'dragstart') {
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/html', this.outerHTML);
   }
@@ -290,32 +290,32 @@ function handleDrop(e) {
   e.stopPropagation();
   this.classList.remove('drag-over-top', 'drag-over-bottom');
   if (this.classList.contains('completed')) return false;
-  
+
   if (draggedCard && draggedCard !== this) {
     const fromId = parseInt(draggedCard.dataset.id);
     const toId = parseInt(this.dataset.id);
-    
+
     const fromIndex = accounts.findIndex(a => a.id === fromId);
     const toIndex = accounts.findIndex(a => a.id === toId);
-    
+
     // Determine orientation based on classes added in enter
     const isTop = e.clientY < this.getBoundingClientRect().top + this.getBoundingClientRect().height / 2;
-    
+
     // Reorder array
     const [movedArr] = accounts.splice(fromIndex, 1);
     let insertIndex = toIndex;
     if (fromIndex < toIndex && !isTop) {
-       // moving down, and dropped on bottom half: insert after
+      // moving down, and dropped on bottom half: insert after
     } else if (fromIndex > toIndex && isTop) {
-       // moving up, and dropped on top half: insert before
+      // moving up, and dropped on top half: insert before
     } else if (fromIndex > toIndex && !isTop) {
-       insertIndex += 1;
+      insertIndex += 1;
     } else if (fromIndex < toIndex && isTop) {
-       insertIndex -= 1;
+      insertIndex -= 1;
     }
-    
+
     accounts.splice(insertIndex, 0, movedArr);
-    
+
     saveState();
     renderAccounts();
   }
@@ -324,113 +324,113 @@ function handleDrop(e) {
 
 // Mobile Touch Sorting
 function handleTouchStart(e) {
-    // Avoid dragging if we click on interactive elements like buttons, checkboxes, input
-    const target = e.target;
-    if (target.closest('.platform-btn') || target.closest('.checkbox-btn') || target.tagName.toLowerCase() === 'input') {
-        return;
-    }
-    
-    if (this.classList.contains('completed')) return;
+  // Avoid dragging if we click on interactive elements like buttons, checkboxes, input
+  const target = e.target;
+  if (target.closest('.platform-btn') || target.closest('.checkbox-btn') || target.tagName.toLowerCase() === 'input') {
+    return;
+  }
 
-    touchDragStarted = false;
-    touchStartY = e.touches[0].clientY;
-    draggedCard = this;
+  if (this.classList.contains('completed')) return;
+
+  touchDragStarted = false;
+  touchStartY = e.touches[0].clientY;
+  draggedCard = this;
 }
 
 function handleTouchMove(e) {
-    if (!draggedCard) return;
-    
-    const currentY = e.touches[0].clientY;
-    
-    // Start drag if we moved a bit vertically
-    if (!touchDragStarted && Math.abs(currentY - touchStartY) > 5) {
-        touchDragStarted = true;
-        this.classList.add('dragging');
-        
-        // Add a ghost element to follow the finger
-        ghostEl = this.cloneNode(true);
-        ghostEl.style.position = 'fixed';
-        ghostEl.style.zIndex = '1000';
-        ghostEl.style.opacity = '0.8';
-        ghostEl.style.pointerEvents = 'none';
-        ghostEl.style.boxShadow = '0 10px 20px rgba(0,0,0,0.2)';
-        document.body.appendChild(ghostEl);
+  if (!draggedCard) return;
+
+  const currentY = e.touches[0].clientY;
+
+  // Start drag if we moved a bit vertically
+  if (!touchDragStarted && Math.abs(currentY - touchStartY) > 5) {
+    touchDragStarted = true;
+    this.classList.add('dragging');
+
+    // Add a ghost element to follow the finger
+    ghostEl = this.cloneNode(true);
+    ghostEl.style.position = 'fixed';
+    ghostEl.style.zIndex = '1000';
+    ghostEl.style.opacity = '0.8';
+    ghostEl.style.pointerEvents = 'none';
+    ghostEl.style.boxShadow = '0 10px 20px rgba(0,0,0,0.2)';
+    document.body.appendChild(ghostEl);
+  }
+
+  if (touchDragStarted) {
+    e.preventDefault(); // prevent scrolling
+
+    const x = e.touches[0].clientX;
+    const y = currentY;
+
+    if (ghostEl) {
+      const rect = draggedCard.getBoundingClientRect();
+      ghostEl.style.left = `${x - rect.width / 2}px`;
+      ghostEl.style.top = `${y - rect.height / 2}px`;
+      ghostEl.style.width = `${rect.width}px`;
     }
-    
-    if (touchDragStarted) {
-      e.preventDefault(); // prevent scrolling
-      
-      const x = e.touches[0].clientX;
-      const y = currentY;
-      
-      if (ghostEl) {
-          const rect = draggedCard.getBoundingClientRect();
-          ghostEl.style.left = `${x - rect.width/2}px`;
-          ghostEl.style.top = `${y - rect.height/2}px`;
-          ghostEl.style.width = `${rect.width}px`;
-      }
-      
-      // Find element underneath
-      // Temporary hide ghost to find underlying elements
-      if (ghostEl) ghostEl.style.display = 'none';
-      const element = document.elementFromPoint(x, y);
-      if (ghostEl) ghostEl.style.display = 'block';
-      
-      const targetCard = element ? element.closest('.account-card') : null;
-      
-      document.querySelectorAll('.account-card').forEach(c => c.classList.remove('drag-over-top', 'drag-over-bottom'));
-      
-      if (targetCard && targetCard !== draggedCard && !targetCard.classList.contains('completed')) {
-          const rect = targetCard.getBoundingClientRect();
-          const isTop = y < rect.top + rect.height / 2;
-          if (isTop) {
-              targetCard.classList.add('drag-over-top');
-          } else {
-              targetCard.classList.add('drag-over-bottom');
-          }
+
+    // Find element underneath
+    // Temporary hide ghost to find underlying elements
+    if (ghostEl) ghostEl.style.display = 'none';
+    const element = document.elementFromPoint(x, y);
+    if (ghostEl) ghostEl.style.display = 'block';
+
+    const targetCard = element ? element.closest('.account-card') : null;
+
+    document.querySelectorAll('.account-card').forEach(c => c.classList.remove('drag-over-top', 'drag-over-bottom'));
+
+    if (targetCard && targetCard !== draggedCard && !targetCard.classList.contains('completed')) {
+      const rect = targetCard.getBoundingClientRect();
+      const isTop = y < rect.top + rect.height / 2;
+      if (isTop) {
+        targetCard.classList.add('drag-over-top');
+      } else {
+        targetCard.classList.add('drag-over-bottom');
       }
     }
+  }
 }
 
 function handleTouchEnd(e) {
-    if (!draggedCard) return;
-    
-    draggedCard.classList.remove('dragging');
-    if (ghostEl) {
-        ghostEl.remove();
-        ghostEl = null;
-    }
-    
-    if (touchDragStarted) {
-      let targetCard = document.querySelector('.drag-over-top, .drag-over-bottom');
-      if (targetCard && targetCard !== draggedCard) {
-          const fromId = parseInt(draggedCard.dataset.id);
-          const toId = parseInt(targetCard.dataset.id);
-          
-          const fromIndex = accounts.findIndex(a => a.id === fromId);
-          const toIndex = accounts.findIndex(a => a.id === toId);
-          
-          const isTop = targetCard.classList.contains('drag-over-top');
-          
-          const [movedArr] = accounts.splice(fromIndex, 1);
-          let insertIndex = toIndex;
-          if (fromIndex < toIndex && !isTop) {
-          } else if (fromIndex > toIndex && isTop) {
-          } else if (fromIndex > toIndex && !isTop) {
-             insertIndex += 1;
-          } else if (fromIndex < toIndex && isTop) {
-             insertIndex -= 1;
-          }
-          
-          accounts.splice(insertIndex, 0, movedArr);
-          saveState();
-          renderAccounts();
+  if (!draggedCard) return;
+
+  draggedCard.classList.remove('dragging');
+  if (ghostEl) {
+    ghostEl.remove();
+    ghostEl = null;
+  }
+
+  if (touchDragStarted) {
+    let targetCard = document.querySelector('.drag-over-top, .drag-over-bottom');
+    if (targetCard && targetCard !== draggedCard) {
+      const fromId = parseInt(draggedCard.dataset.id);
+      const toId = parseInt(targetCard.dataset.id);
+
+      const fromIndex = accounts.findIndex(a => a.id === fromId);
+      const toIndex = accounts.findIndex(a => a.id === toId);
+
+      const isTop = targetCard.classList.contains('drag-over-top');
+
+      const [movedArr] = accounts.splice(fromIndex, 1);
+      let insertIndex = toIndex;
+      if (fromIndex < toIndex && !isTop) {
+      } else if (fromIndex > toIndex && isTop) {
+      } else if (fromIndex > toIndex && !isTop) {
+        insertIndex += 1;
+      } else if (fromIndex < toIndex && isTop) {
+        insertIndex -= 1;
       }
+
+      accounts.splice(insertIndex, 0, movedArr);
+      saveState();
+      renderAccounts();
     }
-    
-    document.querySelectorAll('.account-card').forEach(c => c.classList.remove('drag-over-top', 'drag-over-bottom'));
-    draggedCard = null;
-    touchDragStarted = false;
+  }
+
+  document.querySelectorAll('.account-card').forEach(c => c.classList.remove('drag-over-top', 'drag-over-bottom'));
+  draggedCard = null;
+  touchDragStarted = false;
 }
 
 
@@ -441,7 +441,7 @@ let editingAccountId = null;
 function renderPlatformSelectorInModal(selectedPlatformIds) {
   const container = document.getElementById('platformSelector');
   if (!container) return;
-  
+
   container.innerHTML = PLATFORMS.map(p => {
     const isSelected = selectedPlatformIds.includes(p.id);
     return `
@@ -452,7 +452,7 @@ function renderPlatformSelectorInModal(selectedPlatformIds) {
   }).join('');
 }
 
-window.toggleModalPlatform = function(element) {
+window.toggleModalPlatform = function (element) {
   element.classList.toggle('active');
 };
 
@@ -463,38 +463,38 @@ document.getElementById('addFab').addEventListener('click', () => {
   document.getElementById('saveBtn').textContent = '保存';
   document.getElementById('accountInput').value = '';
   document.querySelector('input[name="todoType"][value="normal"]').checked = true; // default to normal 
-  
+
   // Render empty selected platforms (default none checked as requested)
   renderPlatformSelectorInModal([]);
-  
+
   document.getElementById('typeSelector').style.display = 'flex';
-  
+
   updatePlatformSelectorVisibility();
-  
+
   document.getElementById('addModalOverlay').classList.add('show');
   setTimeout(() => document.getElementById('accountInput').focus(), 100);
 });
 
-window.editAccount = function(event, id) {
+window.editAccount = function (event, id) {
   event.stopPropagation();
   const acc = accounts.find(a => a.id === id);
   if (!acc) return;
-  
+
   editingAccountId = id;
   document.getElementById('modalTitle').textContent = '编辑选项';
   document.getElementById('deleteBtn').style.display = 'block';
   document.getElementById('saveBtn').textContent = '保存修改';
   document.getElementById('accountInput').value = acc.name;
-  
+
   const type = acc.type || 'matrix';
   document.querySelector(`input[name="todoType"][value="${type}"]`).checked = true;
   document.getElementById('typeSelector').style.display = 'none'; // hide type selector on edit
-  
+
   if (type === 'matrix') {
-     renderPlatformSelectorInModal(acc.platforms);
+    renderPlatformSelectorInModal(acc.platforms);
   }
   updatePlatformSelectorVisibility();
-  
+
   document.getElementById('addModalOverlay').classList.add('show');
   setTimeout(() => document.getElementById('accountInput').focus(), 100);
 };
@@ -537,13 +537,13 @@ document.getElementById('saveBtn').addEventListener('click', () => {
   if (!text) return;
 
   const type = document.querySelector('input[name="todoType"]:checked').value;
-  
+
   if (type === 'matrix') {
-     const actives = document.querySelectorAll('.modal-platform-btn.active');
-     if (actives.length === 0) {
-        alert("自媒体矩阵模式下，请至少选择一个平台");
-        return;
-     }
+    const actives = document.querySelectorAll('.modal-platform-btn.active');
+    if (actives.length === 0) {
+      alert("自媒体矩阵模式下，请至少选择一个平台");
+      return;
+    }
   }
 
   if (editingAccountId) {
@@ -554,10 +554,10 @@ document.getElementById('saveBtn').addEventListener('click', () => {
         const actives = document.querySelectorAll('.modal-platform-btn.active');
         const newPlatforms = Array.from(actives).map(el => el.dataset.id);
         acc.platforms = newPlatforms;
-        
+
         // ensure done exists for newly added
         newPlatforms.forEach(pid => {
-           if (acc.done[pid] === undefined) acc.done[pid] = false;
+          if (acc.done[pid] === undefined) acc.done[pid] = false;
         });
       }
     }
@@ -595,7 +595,7 @@ document.addEventListener('keydown', (e) => {
     }
     return;
   }
-  
+
   if (e.key === 'Escape' && document.getElementById('addModalOverlay').classList.contains('show')) {
     closeAddModal();
   }
@@ -603,11 +603,11 @@ document.addEventListener('keydown', (e) => {
 
 
 // ===== Import / Export =====
-window.exportData = function() {
+window.exportData = function () {
   const dataStr = JSON.stringify({ date: getTodayStr(), accounts: accounts }, null, 2);
   const blob = new Blob([dataStr], { type: "application/json" });
   const url = URL.createObjectURL(blob);
-  
+
   const a = document.createElement("a");
   a.href = url;
   a.download = `imtodo-backup-${getTodayStr()}.json`;
@@ -616,7 +616,7 @@ window.exportData = function() {
   document.body.removeChild(a);
 }
 
-window.importData = function() {
+window.importData = function () {
   document.getElementById('importInput').click();
 }
 // Event listener attached in index.html (or later after DOM load)
@@ -625,17 +625,17 @@ window.importData = function() {
 document.addEventListener('DOMContentLoaded', () => {
   initAccounts();
   renderAccounts();
-  
+
   // Setup file import listener
   const importInput = document.getElementById('importInput');
   if (importInput) {
-    importInput.addEventListener('change', function(e) {
+    importInput.addEventListener('change', function (e) {
       const file = e.target.files[0];
       if (!file) return;
-      
+
       if (confirm("导入将覆盖现有全部数据，确认吗？")) {
         const reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = function (e) {
           try {
             const json = JSON.parse(e.target.result);
             if (json && json.accounts) {

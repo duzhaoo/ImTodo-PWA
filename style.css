@@ -545,11 +545,11 @@ body {
 }
 
 .anim-bump img {
-  animation: pop-bump 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  animation: pop-bump 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
 .anim-shrink img {
-  animation: pop-shrink 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: pop-shrink 0.15s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 /* ===== Completed Section ===== */
@@ -584,7 +584,6 @@ body {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  opacity: 0.65;
 }
 
 .account-card.completed {
