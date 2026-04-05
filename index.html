@@ -42,7 +42,7 @@
     </main>
 
     <footer class="app-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 24px 8px 12px;">
-      <p style="margin: 0; color: var(--text-muted); font-size: 0.85rem;">每天自动重置 · 坚持每日完成</p>
+      <span onclick="resetAllTodos()" title="重置所有待办" style="cursor: pointer; color: var(--text-muted); font-size: 0.85rem; transition: 0.2s;" onmouseover="this.style.opacity=0.6" onmouseout="this.style.opacity=1">重置所有</span>
       <div class="footer-actions" style="display: flex; gap: 16px; font-size: 0.85rem;">
         <span onclick="exportData()" title="导出备份" style="cursor: pointer; color: var(--text-muted); transition: 0.2s;" onmouseover="this.style.opacity=0.6" onmouseout="this.style.opacity=1">导出</span>
         <span onclick="importData()" title="导入备份" style="cursor: pointer; color: var(--text-muted); transition: 0.2s;" onmouseover="this.style.opacity=0.6" onmouseout="this.style.opacity=1">导入</span>

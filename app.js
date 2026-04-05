@@ -603,6 +603,24 @@ document.addEventListener('keydown', (e) => {
 
 
 // ===== Import / Export =====
+window.resetAllTodos = function() {
+  if (confirm("确定要将所有待办重置为未完成状态吗？")) {
+    accounts.forEach(acc => {
+      if (acc.type === 'normal') {
+        acc.completed = false;
+      } else if (acc.type === 'matrix') {
+        if (acc.platforms) {
+          acc.platforms.forEach(pid => {
+            if (acc.done) acc.done[pid] = false;
+          });
+        }
+      }
+    });
+    saveState();
+    renderAccounts();
+  }
+};
+
 window.exportData = function () {
   const dataStr = JSON.stringify({ date: getTodayStr(), accounts: accounts }, null, 2);
   const blob = new Blob([dataStr], { type: "application/json" });
